@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+# --- Parse arguments ---
+PURGE_MODE=false
+PKG=""
+
+for arg in "$@"; do
+    if [[ "$arg" == "--purge" ]]; then
+        PURGE_MODE=true
+    else
+        PKG="$arg"
+    fi
+done
+
+if [[ -z "$PKG" ]]; then
+    echo "Usage: sudo dnf-purge <package> [--purge]"
+    exit 1
+fi
+
+# --- Critical package protection ---
+CRITICAL_PKGS=(
+    "systemd"
+    "systemd-libs"
+    "systemd-udevd"
+    "grub2"
+    "grub2-efi"
+    "kernel"
+    "kernel-core"
+    "kernel-modules"
+)
+
+for CRIT in "${CRITICAL_PKGS[@]}"; do
+    if [[ "$PKG" == "$CRIT" ]]; then
+        echo "❌ ERROR: '$PKG' is protected and cannot be purged or removed."
+        exit 1
+    fi
+done
+
+# --- Normal remove ---
+echo "→ Removing $PKG via dnf..."
+sudo dnf remove -y "$PKG"
+
+# --- If no purge flag, stop here ---
+if [[ "$PURGE_MODE" == false ]]; then
+    echo "✔ Normal removal complete."
+    exit 0
+fi
+
+# --- Purge mode activated ---
+echo ""
+echo "=== PURGE MODE ACTIVATED ==="
+echo "→ Running autoremove..."
+sudo dnf autoremove -y
+
+echo ""
+echo "→ Searching for leftover user config/data..."
+
+USER_PATHS=(
+    "$HOME/.config/$PKG"
+    "$HOME/.cache/$PKG"
+    "$HOME/.local/share/$PKG"
+    "$HOME/.var/app/$PKG"
+)
+
+for PATH in "${USER_PATHS[@]}"; do
+    if [[ -d "$PATH" ]]; then
+        echo "Found: $PATH"
+        read -p "Delete this directory? (y/N): " CONFIRM
+        if [[ "$CONFIRM" == "y" || "$CONFIRM" == "Y" ]]; then
+            rm -rf "$PATH"
+            echo "Deleted: $PATH"
+        else
+            echo "Skipped: $PATH"
+        fi
+    fi
+done
+
+echo ""
+echo "✔ Full purge complete."
