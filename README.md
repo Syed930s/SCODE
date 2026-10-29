@@ -103,6 +103,4 @@ No extra `-l` flags needed — everything used (`conio.h`, `windows.h` on Window
 - A terminal that honors ANSI escape codes (`\x1b[2J\x1b[H` for screen clear). On Windows, `term_on()` enables virtual terminal processing automatically, so no manual setup is needed.
 - Input buffer is capped at `MAXN` (65536) characters.
 
-## License
 
-No license file is currently included — add a `LICENSE` to the repo root to make reuse terms explicit.
