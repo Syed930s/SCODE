@@ -43,7 +43,7 @@ static int enc(int c)
     size_t i;
     if (c >= 'A' && c <= 'Z') return 2 * (c - 'A') + 1;
     if (c >= 'a' && c <= 'z') return 2 * (c - 'a') + 2;
-    if (c >= '0' && c <= '9') return 2 * (c - '0') + 1;
+    if (c >= '0' && c <= '9') return 91 + (c - '0');
     for (i = 0; i < NP; i++)
         if (pmap[i].cp == c) return pmap[i].code;
     return -1;
@@ -54,6 +54,7 @@ static int dec(int n)
     size_t i;
     if (n >= 1 && n <= 52)
         return (n & 1) ? 'A' + (n - 1) / 2 : 'a' + (n - 2) / 2;
+    if (n >= 91 && n <= 100) return '0' + (n - 91);
     for (i = 0; i < NP; i++)
         if (pmap[i].code == n) return pmap[i].cp;
     return -1;
